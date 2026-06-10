@@ -1,0 +1,66 @@
+# Sonatype Guide — Agentic Patches (AGP) Configuration
+# This file gives you full control over AGP behavior.
+# Learn more: https://guide.sonatype.com
+
+version: "1"
+
+# Paths and packages AGP should skip
+ignore:
+  paths:
+    - "**/target/**"
+    - "**/.mvn/**"
+  # packages:
+  #   - "com.example:package-to-skip"
+
+# Build validation after upgrades
+# AGP runs these commands to verify upgrades don't break the build.
+validation:
+  enabled: true
+  commands:
+    - "./mvnw compile -q"
+    - "./mvnw test -q"
+  timeout: 10m
+
+# Pull request settings
+pr:
+  labels:
+    - dependencies
+    - automated
+    - agp
+  draft: false
+  titleTemplate: "chore(deps): {{.GroupName}}"
+  branchTemplate: "agp/{{.GroupID}}"
+  # reviewers:
+  #   - "your-github-username"
+
+# Rate limiting — controls how many PRs AGP opens
+limits:
+  maxOpenPRs: 5
+  maxPRsPerRun: 10
+  waitPeriod:
+    major: 7d
+    minor: 3d
+    patch: 1d
+
+# Auto-merge settings — disabled by default for safety
+automerge:
+  enabled: false
+  method: squash  # "squash", "merge", or "rebase"
+
+# How to group dependency updates into PRs
+grouping:
+  strategy: individual
+  # rules:
+  #   - name: "spring-boot"
+  #     pattern: "org.springframework.boot:*"
+  #     strategy: group
+
+# Monorepo per-project overrides
+# Not applicable — this is a single-project repository.
+# projects:
+#   backend:
+#     path: backend
+#     ecosystem: maven
+#     validation:
+#       enabled: true
+#       commands: ["./mvnw compile -q"]

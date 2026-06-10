@@ -1,0 +1,114 @@
+# Sonatype Guide — Agentic Patches (AGP) Workflow
+# Learn more: https://guide.sonatype.com
+# File: .github/workflows/agp-workflow.yml
+
+name: "Sonatype Guide - Agentic Patches"
+
+on:
+  # Run weekly on Monday at 09:00 UTC
+  schedule:
+    - cron: '0 9 * * 1'
+
+  # Allow manual triggers with configurable inputs
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "AGP run mode (full, vulnerabilities, outdated)"
+        required: false
+        type: string
+        default: 'full'
+      vulnerabilities:
+        description: "Comma-separated list of specific vulnerabilities to fix"
+        required: false
+        type: string
+      verbose:
+        description: "Enable verbose logging"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write  # Required for Sonatype Guide OIDC authentication
+
+# Prevent concurrent AGP runs from conflicting
+concurrency:
+  group: agp-workflow
+  cancel-in-progress: false
+
+jobs:
+  agp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Private registry authentication
+      # Not needed — this project uses only public Maven Central.
+      # Uncomment and configure if you add a private Maven registry later.
+      #
+      # - name: Configure Maven settings for private registry
+      #   uses: whelk-io/maven-settings-xml-action@v22
+      #   with:
+      #     servers: >
+      #       [
+      #         {
+      #           "id": "private-repo",
+      #           "username": "${{ secrets.MAVEN_USERNAME }}",
+      #           "password": "${{ secrets.MAVEN_PASSWORD }}"
+      #         }
+      #       ]
+      #     repositories: >
+      #       [
+      #         {
+      #           "id": "private-repo",
+      #           "url": "https://your-registry.example.com/repository/maven-releases/"
+      #         }
+      #       ]
+
+      # Step 3: Run AGP
+      - name: Run Sonatype Guide AGP
+        uses: sonatype/agp-action@v1
+        with:
+          mode: ${{ inputs.mode || 'full' }}
+          vulnerabilities: ${{ inputs.vulnerabilities }}
+          create-pr: 'true'
+          dry-run: 'false'
+          verbose: ${{ inputs.verbose || 'false' }}
+          docker-registry: sonatype.repo.sonatype.app/docker-all
+          # docker-username: ${{ secrets.DOCKER_USERNAME }}
+          # docker-password: ${{ secrets.DOCKER_PASSWORD }}
+
+          # Maven settings.xml — uncomment if you use a private Maven registry.
+          # Provide a complete settings.xml with server credentials for dependency resolution.
+          # maven-settings-xml: |
+          #   <settings>
+          #     <servers>
+          #       <server>
+          #         <id>private-repo</id>
+          #         <username>${{ secrets.MAVEN_USERNAME }}</username>
+          #         <password>${{ secrets.MAVEN_PASSWORD }}</password>
+          #       </server>
+          #     </servers>
+          #   </settings>
+
+          # npm — not applicable to this project (no package.json found)
+          # npmrc-content: |
+          #   registry=https://your-registry.example.com/repository/npm-all/
+          #   //your-registry.example.com/repository/npm-all/:_authToken=${{ secrets.NPM_TOKEN }}
+
+          # Python — not applicable to this project (no pyproject.toml/requirements.txt found)
+          # pip-index-url: https://your-registry.example.com/repository/pypi-all/simple
+          # pip-extra-index-url: https://pypi.org/simple
+
+        # Step 4: Environment variables
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          # AGP_API_TOKEN — optional, only needed if OIDC is not available
+          # AGP_API_TOKEN: ${{ secrets.AGP_API_TOKEN }}
+          # AGP_API_URL — auto-discovered via OIDC, no need to set manually
+          # AGP_API_URL: ${{ vars.AGP_API_URL }}
