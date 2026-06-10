@@ -39,7 +39,7 @@ concurrency:
 
 jobs:
   agp:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 60
 
     steps:
@@ -79,9 +79,9 @@ jobs:
           create-pr: 'true'
           dry-run: 'false'
           verbose: ${{ inputs.verbose || 'false' }}
-          docker-registry: sonatype.repo.sonatype.app/docker-all
-          # docker-username: ${{ secrets.DOCKER_USERNAME }}
-          # docker-password: ${{ secrets.DOCKER_PASSWORD }}
+          docker-image: sonatype.repo.sonatype.app/docker-all/sonatype/agp:latest
+          docker-username: ${{ secrets.DOCKER_USERNAME }}
+          docker-password: ${{ secrets.DOCKER_PASSWORD }}
 
           # Maven settings.xml — uncomment if you use a private Maven registry.
           # Provide a complete settings.xml with server credentials for dependency resolution.
