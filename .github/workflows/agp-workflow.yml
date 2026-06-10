@@ -111,4 +111,4 @@ jobs:
           # AGP_API_TOKEN — optional, only needed if OIDC is not available
           # AGP_API_TOKEN: ${{ secrets.AGP_API_TOKEN }}
           # AGP_API_URL — auto-discovered via OIDC, no need to set manually
-          # AGP_API_URL: ${{ vars.AGP_API_URL }}
+          AGP_API_URL: https://api.guide-dev.sonatype.dev
